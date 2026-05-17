@@ -16,15 +16,17 @@
 
 ## Rule loading policy
 作業内容に応じて、必要なルールファイルだけ読んでください。
+- **プロジェクトの目的・仕様・技術スタックの確認**:
+  - `.claude/rules/00-project-overview.md`
+- **新機能開発・Issue対応・ブランチ作成・大きな変更・リファクタリング**:
+  - `.claude/rules/10-development-flow.md`
+  - `.claude/rules/50-agent-safety.md`
 - **コミット作成・コミット文提案**:
   - `.claude/rules/20-conventional-commits.md`
 - **テスト追加・修正**:
   - `.claude/rules/30-testing.md`
 - **AWS, CDK, GitHub Actions, Docker, デプロイ**:
   - `.claude/rules/40-aws-cicd.md`
-- **大きな変更、リファクタリング**:
-  - `.claude/rules/10-development-flow.md`
-  - `.claude/rules/50-agent-safety.md`
 
 ## 出力について
 - 「すごい」「適切」などの過大な修辞は使わないようにしてください。
