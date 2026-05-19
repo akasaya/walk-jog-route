@@ -27,7 +27,7 @@
 **完了条件**: Open-Meteo から天気取得できる。失敗時に None を返す（例外を伝播しない）。
 
 - [ ] 2.1 `WeatherService.get_current_weather(lat, lon)` を実装する（Open-Meteo `/v1/forecast?current=temperature_2m,weathercode,windspeed_10m`）
-- [ ] 2.2 `WeatherService` の単体テストを書く（正常系・Open-Meteo 失敗時の None 返却）
+- [x] 2.2 `WeatherService` の単体テストを書く（正常系・Open-Meteo 失敗時の None 返却）
 
 ---
 
