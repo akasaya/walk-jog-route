@@ -50,7 +50,7 @@
 - [ ] 4.1 `RoutingService.generate_route(origin, waypoints, profile)` を実装する（`GET /route?point=origin&point=wp1&...&point=origin&profile=foot`）
 - [ ] 4.2 実距離が目標距離の ±20% を超えた場合、waypoints を 1 点間引いて 1 回再試行するロジックを実装する
 - [ ] 4.3 `estimated_minutes` の計算を実装する（GraphHopper レスポンス `time`（ms）/ 60,000 の整数値）
-- [ ] 4.4 `RoutingService` の単体テストを書く（外部 API はモック、再試行ロジックを含む）
+- [x] 4.4 `RoutingService` の単体テストを書く（外部 API はモック、再試行ロジックを含む）
 
 ---
 
