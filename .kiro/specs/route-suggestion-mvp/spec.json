@@ -1,0 +1,42 @@
+{
+  "feature_name": "route-suggestion-mvp",
+  "project_description": "ルート提案 MVP",
+  "language": "ja",
+  "created_at": "2026-05-19T00:00:00Z",
+  "updated_at": "2026-05-19T00:00:00Z",
+  "phase": "tasks-generated",
+  "status": {
+    "requirements": "approved",
+    "design": "generated",
+    "tasks": "pending",
+    "implementation": "pending"
+  },
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false
+    }
+  },
+  "phases": {
+    "requirements": {
+      "file": "requirements.md",
+      "approved": true
+    },
+    "design": {
+      "file": "design.md",
+      "approved": false
+    },
+    "tasks": {
+      "file": "tasks.md",
+      "approved": false
+    }
+  }
+}
