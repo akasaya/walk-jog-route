@@ -14,10 +14,10 @@
 **要件**: 7.1, 7.2, 7.3  
 **完了条件**: FastAPI が起動し、ヘルスチェックが 200 を返す。Lambda 用コンテナが buildできる。
 
-- [ ] 1.1 FastAPI プロジェクトを初期化し、Pydantic モデル（RouteRequest, WeatherData, WaypointItem, RouteWaypoints, RouteSuggestionResponse, TrackRequest）を `models/route.py` に定義する
-- [ ] 1.2 DynamoDB `HistoryService` を実装する（ルート保存・時系列降順取得・GPS 実績追記。PK=userId, SK=`{started_at}#{routeId}`）
-- [ ] 1.3 Lambda Container Image 対応の `Dockerfile` を作成し、`main.py` に `Mangum(app, lifespan="off")` アダプタを追加する
-- [ ] 1.4 `GET /health` エンドポイントを実装し、`{"status": "ok"}` を返すことを確認する
+- [x] 1.1 FastAPI プロジェクトを初期化し、Pydantic モデル（RouteRequest, WeatherData, WaypointItem, RouteWaypoints, RouteSuggestionResponse, TrackRequest）を `models/route.py` に定義する
+- [x] 1.2 DynamoDB `HistoryService` を実装する（ルート保存・時系列降順取得・GPS 実績追記。PK=userId, SK=`{started_at}#{routeId}`）
+- [x] 1.3 Lambda Container Image 対応の `Dockerfile` を作成し、`main.py` に `Mangum(app, lifespan="off")` アダプタを追加する
+- [x] 1.4 `GET /health` エンドポイントを実装し、`{"status": "ok"}` を返すことを確認する
 
 ---
 
