@@ -36,6 +36,15 @@ class RouteSuggestionResponse(BaseModel):
     weather: WeatherData | None
 
 
+class RouteHistoryItem(BaseModel):
+    route_id: str
+    started_at: str
+    mode: Literal["walk", "jog"]
+    distance_km: float
+    has_track: bool
+    polyline: str
+
+
 class TrackPoint(BaseModel):
     lat: float
     lon: float
