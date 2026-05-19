@@ -36,7 +36,7 @@
 **要件**: 2.2, 2.5  
 **完了条件**: Claude API が RouteWaypoints（waypoints + reasoning）を構造化出力で返す。
 
-- [ ] 3.1 `AIService.generate_waypoints()` を実装する（`client.messages.parse(output_format=RouteWaypoints)` で構造化出力）
+- [x] 3.1 `AIService.generate_waypoints()` を実装する（`client.messages.parse(output_format=RouteWaypoints)` で構造化出力）
 - [x] 3.2 プロンプトテンプレートを実装する（現在地・目標距離・移動モード・天気・過去履歴サマリを埋め込む。生座標はプロンプトに含めず 1 桁精度に丸める）
 - [x] 3.3 `AIService` の単体テストを書く（Claude API をモック、RouteWaypoints の型を検証）
 
