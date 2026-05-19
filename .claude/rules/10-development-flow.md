@@ -32,6 +32,30 @@ CD: staging デプロイ → smoke test → 本番デプロイ
 
 ---
 
+## スキル・コマンド対応表
+
+各フェーズで使うスキルとコマンドの一覧。エージェントはこの表を参照して適切なスキルを選択すること。
+
+| フェーズ | スキル / コマンド | 用途 |
+|---------|----------------|------|
+| 企画・アイデア整理 | `superpowers:brainstorming` | 機能アイデアを設計に落とし込む |
+| 仕様化（全体） | `/kiro:spec-init` `/kiro:spec-requirements` `/kiro:spec-design` `/kiro:spec-tasks` | kiro スペック駆動開発 |
+| 実装 | `/kiro:spec-impl {feature}` | タスクをTDDで実装 |
+| TDD サポート | `superpowers:test-driven-development` | Red→Green→Refactor サイクルの補助 |
+| ローカルレビュー | `/review`（`code-review:code-review`） | PR 作成前のセルフレビュー |
+| コミット | `commit-commands:commit` | Conventional Commits に沿ったコミット生成 |
+| PR 作成 | `commit-commands:commit-push-pr` | コミット〜PR 作成までを一括実行 |
+| 深いレビュー | `/ultrareview <PR番号>` | 設計変更・大規模リファクタリング時 |
+| フロントデプロイ | `cloudflare-pages-deploy` | 静的サイトを Cloudflare Pages へデプロイ |
+| 仕様進捗確認 | `/kiro:spec-status {feature}` | 現在のスペック進捗をいつでも確認 |
+
+### ルール
+- スキルはフェーズ開始前に確認し、該当するスキルがあれば必ず使う。
+- `superpowers:brainstorming` は kiro 仕様化の「前段」として任意で使う（大きな機能や方針が曖昧な場合）。
+- `/review` は Phase 6 で必須。`/ultrareview` は設計変更を含む PR に使う。
+
+---
+
 ## Phase 1: Issue 作成
 
 **すべての作業は Issue から始まる。** バグ修正・機能追加・リファクタリング問わず。

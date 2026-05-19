@@ -11,13 +11,14 @@ GitHub Actions (OIDC)
     ↓
 Docker build → ECR push
     ↓
-App Runner（自動デプロイ）
-    ├─ HTTPS / オートスケール: 組み込み済み
-    └─ VPC Connector → DynamoDB（IAM認証）
+Lambda（Container Image）+ Function URL
+    └─ DynamoDB（IAM認証）
 
 Web フロントエンド
-    S3 → CloudFront（OAC）
+    Amplify Hosting（GitHub 連携デプロイ）
 ```
+
+> ⚠️ **App Runner はメンテナンスモードのため使用しない。** Lambda Container Image を使う。
 
 ---
 
@@ -25,11 +26,11 @@ Web フロントエンド
 
 | リソース | 月額目安 |
 |---------|---------|
-| App Runner（0.25 vCPU / 0.5 GB） | ~$5–10 |
+| Lambda（Container Image）+ Function URL | ~$0–3 |
 | ECR | ~$1 |
 | DynamoDB（オンデマンド） | 無料枠内 |
-| S3 + CloudFront | ~$0–1 |
-| **合計** | **~$6–12** |
+| Amplify Hosting | ~$0–5 |
+| **合計** | **~$1–9** |
 
 ---
 
@@ -50,7 +51,7 @@ GitHub Actions 用ロール（deploy-role）
     - ecr:InitiateLayerUpload
     - ecr:UploadLayerPart
     - ecr:CompleteLayerUpload
-    - apprunner:StartDeployment（手動トリガーの場合）
+    - lambda:UpdateFunctionCode
 ```
 
 ### CDK での定義例
@@ -92,45 +93,61 @@ const repo = new ecr.Repository(this, 'AppRepo', {
 
 ---
 
-## 3. App Runner
+## 3. Lambda（Container Image）+ Function URL
+
+App Runner に代わるバックエンド実行環境。ECR のイメージをそのまま Lambda で動かす。
+FastAPI には `mangum` アダプターを追加する（1 パッケージのみ）。
 
 ```typescript
-const appRunner = new apprunner.Service(this, 'ApiService', {
-  source: apprunner.Source.fromEcr({
-    imageConfiguration: {
-      port: 8000,
-      environmentVariables: {
-        ENV: 'production',
-      },
-      environmentSecrets: {
-        MAPS_API_KEY: apprunner.Secret.fromSecretsManager(mapsApiKeySecret),
-      },
-    },
-    repository: repo,
-    tagOrDigest: process.env.IMAGE_TAG ?? 'latest', // CI から git SHA を渡す（IMAGE_TAG 環境変数）
+const lambdaRole = new iam.Role(this, 'LambdaExecutionRole', {
+  assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+  managedPolicies: [
+    iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+  ],
+});
+table.grantReadWriteData(lambdaRole); // DynamoDB アクセス
+
+const fn = new lambda.DockerImageFunction(this, 'ApiFunction', {
+  code: lambda.DockerImageCode.fromEcr(repo, {
+    tagOrDigest: process.env.IMAGE_TAG ?? 'latest', // CI から git SHA を渡す
   }),
-  instanceRole: instanceRole, // DynamoDB アクセス用
-  accessRole: accessRole,     // ECR アクセス用
-  cpu: apprunner.Cpu.QUARTER_VCPU,   // 最小サイズでコスト抑制
-  memory: apprunner.Memory.HALF_GB,
-  autoDeploymentsEnabled: true,      // ECR push で自動デプロイ
+  timeout: cdk.Duration.minutes(1),  // Claude API の応答を考慮して 60 秒
+  memorySize: 512,
+  environment: {
+    ENV: 'production',
+  },
+  role: lambdaRole,
+});
+
+const fnUrl = fn.addFunctionUrl({
+  authType: lambda.FunctionUrlAuthType.NONE, // 個人用途のため簡易化
+  cors: {
+    allowedOrigins: ['https://*.amplifyapp.com'],
+    allowedMethods: [lambda.HttpMethod.ALL],
+    allowedHeaders: ['*'],
+  },
 });
 ```
 
-### インスタンスロール（App Runner → DynamoDB）
-```typescript
-const instanceRole = new iam.Role(this, 'AppRunnerInstanceRole', {
-  assumedBy: new iam.ServicePrincipal('tasks.apprunner.amazonaws.com'),
-});
-table.grantReadWriteData(instanceRole);
+### FastAPI への追加（最小変更）
+
+```python
+# requirements.txt に追加
+mangum
+
+# main.py に追加
+from mangum import Mangum
+handler = Mangum(app, lifespan="off")
 ```
 
-### アクセスロール（App Runner → ECR）
-```typescript
-const accessRole = new iam.Role(this, 'AppRunnerAccessRole', {
-  assumedBy: new iam.ServicePrincipal('build.apprunner.amazonaws.com'),
-});
-repo.grantPull(accessRole);
+### GitHub Actions でのデプロイ（ECR push → Lambda 更新）
+
+```yaml
+- name: Update Lambda function
+  run: |
+    aws lambda update-function-code \
+      --function-name walk-jog-route-api \
+      --image-uri $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
 ```
 
 ---
@@ -150,26 +167,39 @@ const table = new dynamodb.Table(this, 'RouteTable', {
 
 ---
 
-## 5. Web フロントエンド（S3 + CloudFront）
+## 5. Web フロントエンド（Amplify Hosting）
+
+S3 + CloudFront より簡単。CI/CD・HTTPS・CDN が GitHub 連携で自動構成される。
+
+### GitHub 連携デプロイ（推奨）
+
+Amplify コンソールまたは CDK で GitHub リポジトリを連携し、`main` ブランチへの push で自動ビルド・デプロイ。
 
 ```typescript
-const bucket = new s3.Bucket(this, 'FrontendBucket', {
-  blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL, // OAC 経由のみ許可
-  removalPolicy: cdk.RemovalPolicy.DESTROY,
-  autoDeleteObjects: true,
+// CDK での Amplify Hosting 定義
+import * as amplify from '@aws-cdk/aws-amplify-alpha';
+
+const amplifyApp = new amplify.App(this, 'FrontendApp', {
+  appName: 'walk-jog-route',
+  sourceCodeProvider: new amplify.GitHubSourceCodeProvider({
+    owner: 'your-github-username',
+    repository: 'walk-jog-route',
+    oauthToken: cdk.SecretValue.secretsManager('github-token'),
+  }),
+  buildSpec: codebuild.BuildSpec.fromObjectToYaml({
+    version: '1.0',
+    frontend: {
+      phases: {
+        preBuild: { commands: ['cd frontend && pnpm install'] },
+        build: { commands: ['pnpm build'] },
+      },
+      artifacts: { baseDirectory: 'frontend/dist', files: ['**/*'] },
+      cache: { paths: ['frontend/node_modules/**/*'] },
+    },
+  }),
 });
 
-const distribution = new cloudfront.Distribution(this, 'Distribution', {
-  defaultBehavior: {
-    origin: origins.S3BucketOrigin.withOriginAccessControl(bucket),
-    viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-  },
-  priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // US/EU/日本のみ（コスト削減）
-  defaultRootObject: 'index.html',
-  errorResponses: [
-    { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html' }, // SPA 用
-  ],
-});
+amplifyApp.addBranch('main');
 ```
 
 ---
@@ -179,9 +209,14 @@ const distribution = new cloudfront.Distribution(this, 'Distribution', {
 API キーなど秘密情報は Secrets Manager に置く。コードにハードコードしない。
 
 ```typescript
-const mapsApiKeySecret = new secretsmanager.Secret(this, 'MapsApiKey', {
-  secretName: 'walk-jog-route/maps-api-key',
+const claudeApiKeySecret = new secretsmanager.Secret(this, 'ClaudeApiKey', {
+  secretName: 'walk-jog-route/claude-api-key',
 });
+
+// Lambda の環境変数（Secrets Manager ARN を渡し、起動時に取得）
+environmentSecrets: {
+  CLAUDE_API_KEY: lambda.Secret.fromSecretsManager(claudeApiKeySecret),
+},
 ```
 
 ---
@@ -193,6 +228,7 @@ const mapsApiKeySecret = new secretsmanager.Secret(this, 'MapsApiKey', {
 - `test` ジョブ（lint / type check / pytest）が通過してから `deploy` ジョブが実行される
 - AWS 認証は OIDC（`AWS_DEPLOY_ROLE_ARN` を GitHub Secrets に設定）
 - イメージタグは `github.sha` を使用
+- デプロイ: ECR push → `aws lambda update-function-code`
 
 ---
 
@@ -201,8 +237,8 @@ const mapsApiKeySecret = new secretsmanager.Secret(this, 'MapsApiKey', {
 ```
 [ ] OIDC を使い、静的クレデンシャルを GitHub Secrets に置いていない
 [ ] ECR リポジトリはプライベート
-[ ] App Runner の環境変数に秘密情報を直書きしていない（Secrets Manager 経由）
-[ ] S3 バケットはパブリックアクセスブロック済み（CloudFront OAC のみ）
+[ ] Lambda の環境変数に秘密情報を直書きしていない（Secrets Manager 経由）
+[ ] Lambda Function URL の CORS を Amplify ドメインのみに制限している
 [ ] DynamoDB は IAM 認証のみ（パブリックエンドポイントへの直接アクセスなし）
 [ ] IAM ロールは最小権限（必要なアクションのみ許可）
 [ ] CloudWatch Logs でアプリログを収集している
@@ -216,4 +252,5 @@ const mapsApiKeySecret = new secretsmanager.Secret(this, 'MapsApiKey', {
 - `aws` CLI で本番リソースを直接変更しない（CDK 経由で管理する）。
 - 静的クレデンシャルをコードに書かない。
 - イメージタグは `latest` のみにしない（`git SHA` を必ず付ける）。
-- App Runner の設定変更（CPU/Memory/環境変数）は CDK で行い、コンソールで直接変更しない（ドリフトを避ける）。
+- **App Runner を提案・使用しない**（メンテナンスモード）。バックエンドは Lambda Container Image を使う。
+- Lambda の設定変更（timeout/memory/環境変数）は CDK で行い、コンソールで直接変更しない（ドリフトを避ける）。

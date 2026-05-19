@@ -27,6 +27,8 @@
   - `.claude/rules/30-testing.md`
 - **AWS, CDK, GitHub Actions, Docker, デプロイ**:
   - `.claude/rules/40-aws-cicd.md`
+- **セキュリティ設計・PII 取り扱い・入力バリデーション実装・依存関係管理**:
+  - `.claude/rules/60-security.md`
 
 ## 出力について
 - 「すごい」「適切」などの過大な修辞は使わないようにしてください。
