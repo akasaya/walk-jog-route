@@ -9,20 +9,37 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  test-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install -r requirements.txt
-      - run: ruff check .
-      - run: mypy .
-      - run: pytest
+      - run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - run: ruff check backend/
+      - run: mypy backend/
+      - run: pytest tests/
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install
+        working-directory: frontend
+      - run: pnpm test
+        working-directory: frontend
 
   deploy:
-    needs: test
+    needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,10 +59,14 @@ jobs:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/walk-jog-route:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/walk-jog-route:$IMAGE_TAG
+          docker build -t "$ECR_REGISTRY/walk-jog-route:$IMAGE_TAG" backend/
+          docker push "$ECR_REGISTRY/walk-jog-route:$IMAGE_TAG"
 
-      # autoDeploymentsEnabled: true の場合は push だけで App Runner が自動デプロイ
-      # 手動トリガーにする場合は以下を追加:
-      # - name: Deploy to App Runner
-      #   run: aws apprunner start-deployment --service-arn ${{ secrets.APP_RUNNER_SERVICE_ARN }}
+      - name: Update Lambda function
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          aws lambda update-function-code \
+            --function-name walk-jog-route-api \
+            --image-uri "$ECR_REGISTRY/walk-jog-route:$IMAGE_TAG"

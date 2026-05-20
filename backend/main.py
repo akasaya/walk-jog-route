@@ -8,7 +8,7 @@ from backend.routers import health, history, route_execution, routes
 
 app = FastAPI(title="Walk Jog Route API")
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 app.include_router(health.router)
 app.include_router(routes.router)
 app.include_router(route_execution.router)

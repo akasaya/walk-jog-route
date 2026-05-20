@@ -53,7 +53,7 @@ class AIService:
             messages=[{"role": "user", "content": prompt}],
             output_format=RouteWaypoints,
         )
-        return message.parsed
+        return message.parsed  # type: ignore[attr-defined]
 
     def _build_user_prompt(
         self,

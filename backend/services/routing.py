@@ -45,7 +45,7 @@ class RoutingService:
         waypoints: list[WaypointItem],
         profile: str,
     ) -> tuple[str, int, int]:
-        params: list[tuple[str, str]] = [
+        params: list[tuple[str, str | int | float | bool | None]] = [
             ("point", f"{origin_lat},{origin_lon}")
         ]
         for wp in waypoints:
