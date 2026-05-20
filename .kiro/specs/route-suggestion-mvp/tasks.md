@@ -114,8 +114,8 @@
 **要件**: 4.1, 4.2, 4.3, 4.4  
 **完了条件**: 開始ボタン押下 → GPS 追跡開始 → リアルタイム地図更新 → 完了/中断で記録が保存される。
 
-- [ ] 10.1 `useRouteTracking` hook を実装する（`navigator.geolocation.watchPosition` で定期収集し、バッファが一定数に達したら `POST /track` を呼び出す）
-- [ ] 10.2 `ActiveRoute` ページを実装する（提案ルートのポリライン表示・現在地マーカーのリアルタイム更新・完了/中断ボタン）
+- [x] 10.1 `useRouteTracking` hook を実装する（`navigator.geolocation.watchPosition` で定期収集し、バッファが一定数に達したら `POST /track` を呼び出す）
+- [x] 10.2 `ActiveRoute` ページを実装する（提案ルートのポリライン表示・現在地マーカーのリアルタイム更新・完了/中断ボタン）
 
 ---
 

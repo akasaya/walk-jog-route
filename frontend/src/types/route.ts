@@ -34,3 +34,31 @@ export interface RouteHistoryItem {
   has_track: boolean;
   polyline: string;
 }
+
+export interface TrackPoint {
+  lat: number;
+  lon: number;
+  timestamp: string;
+}
+
+export interface StartRouteRequest {
+  polyline: string;
+  distance_km: number;
+  mode: Mode;
+  weather: WeatherData | null;
+}
+
+export interface StartRouteResponse {
+  route_id: string;
+  started_at: string;
+}
+
+export interface TrackRequest {
+  started_at: string;
+  points: TrackPoint[];
+  status: "tracking" | "completed" | "abandoned";
+}
+
+export interface TrackResponse {
+  saved_count: number;
+}

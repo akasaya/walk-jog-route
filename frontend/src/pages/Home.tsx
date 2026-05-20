@@ -4,11 +4,16 @@ import { suggestRoute } from "../api/routes";
 import { RouteMap } from "../components/RouteMap";
 import { RouteRequestForm } from "../components/RouteRequestForm";
 import { useGeolocation } from "../hooks/useGeolocation";
-import type { RouteRequest, RouteSuggestionResponse } from "../types/route";
+import type { Mode, RouteRequest, RouteSuggestionResponse } from "../types/route";
 
-export function Home() {
+interface HomeProps {
+  onStartRoute?: (suggestion: RouteSuggestionResponse, mode: Mode) => void;
+}
+
+export function Home({ onStartRoute }: HomeProps) {
   const geo = useGeolocation();
   const [suggestion, setSuggestion] = useState<RouteSuggestionResponse | null>(null);
+  const [lastMode, setLastMode] = useState<Mode>("walk");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,6 +23,7 @@ export function Home() {
   const handleSubmit = async (request: RouteRequest) => {
     setIsLoading(true);
     setError(null);
+    setLastMode(request.mode);
     try {
       const result = await suggestRoute(request);
       setSuggestion(result);
@@ -57,6 +63,17 @@ export function Home() {
         onSubmit={handleSubmit}
         isLoading={isLoading}
       />
+
+      {suggestion && onStartRoute && (
+        <div style={{ padding: "0.5rem" }}>
+          <button
+            type="button"
+            onClick={() => onStartRoute(suggestion, lastMode)}
+          >
+            ルートを開始
+          </button>
+        </div>
+      )}
 
       <div style={{ flex: 1 }}>
         <RouteMap
