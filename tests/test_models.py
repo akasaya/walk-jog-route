@@ -130,18 +130,19 @@ class TestTrackRequest:
         req = TrackRequest(
             points=[TrackPoint(lat=35.0, lon=139.0, timestamp="2026-05-19T10:00:00Z")],
             status="completed",
+            started_at="2026-05-19T09:00:00",
         )
         assert req.status == "completed"
         assert len(req.points) == 1
 
     def test_track_request_tracking(self):
-        req = TrackRequest(points=[], status="tracking")
+        req = TrackRequest(points=[], status="tracking", started_at="2026-05-19T09:00:00")
         assert req.status == "tracking"
 
     def test_track_request_abandoned(self):
-        req = TrackRequest(points=[], status="abandoned")
+        req = TrackRequest(points=[], status="abandoned", started_at="2026-05-19T09:00:00")
         assert req.status == "abandoned"
 
     def test_track_request_invalid_status_raises(self):
         with pytest.raises(ValidationError):
-            TrackRequest(points=[], status="unknown")
+            TrackRequest(points=[], status="unknown", started_at="2026-05-19T09:00:00")
