@@ -8,9 +8,10 @@ import type { Mode, RouteRequest, RouteSuggestionResponse } from "../types/route
 
 interface HomeProps {
   onStartRoute?: (suggestion: RouteSuggestionResponse, mode: Mode) => void;
+  onGoHistory?: () => void;
 }
 
-export function Home({ onStartRoute }: HomeProps) {
+export function Home({ onStartRoute, onGoHistory }: HomeProps) {
   const geo = useGeolocation();
   const [suggestion, setSuggestion] = useState<RouteSuggestionResponse | null>(null);
   const [lastMode, setLastMode] = useState<Mode>("walk");
@@ -55,6 +56,14 @@ export function Home({ onStartRoute }: HomeProps) {
       {error && (
         <div role="alert" style={{ padding: "0.5rem", color: "red" }}>
           {error}
+        </div>
+      )}
+
+      {onGoHistory && (
+        <div style={{ padding: "0 0.5rem" }}>
+          <button type="button" onClick={onGoHistory}>
+            履歴を見る
+          </button>
         </div>
       )}
 
