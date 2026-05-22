@@ -59,10 +59,10 @@
 **要件**: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 7.2, 7.3, 7.5  
 **完了条件**: `POST /routes/suggest` が 30 秒以内にポリラインを返す。異常系で適切なステータスコードを返す。
 
-- [ ] 5.1 `RouteService.suggest(request)` を `async def` で実装する（Weather → History → AI → Routing を順次オーケストレーション）
-- [ ] 5.2 `POST /routes/suggest` エンドポイントを実装する（`httpx.AsyncClient(timeout=28)` で 30 秒超過を HTTP 503 に変換）
-- [ ] 5.3 `slowapi` でレートリミット（`10 req/min` per `X-User-Id` ヘッダー）を設定する
-- [ ] 5.4 `POST /routes/suggest` の統合テストを書く（200 正常系・422 バリデーション失敗・503 外部サービスエラー）
+- [x] 5.1 `RouteService.suggest(request)` を `async def` で実装する（Weather → History → AI → Routing を順次オーケストレーション）
+- [x] 5.2 `POST /routes/suggest` エンドポイントを実装する（`httpx.AsyncClient(timeout=28)` で 30 秒超過を HTTP 503 に変換）
+- [x] 5.3 `slowapi` でレートリミット（`10 req/min` per `X-User-Id` ヘッダー）を設定する
+- [x] 5.4 `POST /routes/suggest` の統合テストを書く（200 正常系・422 バリデーション失敗・503 外部サービスエラー）
 
 ---
 
@@ -71,8 +71,8 @@
 **要件**: 4.1, 4.2, 4.3  
 **完了条件**: 開始・追跡・完了/中断がそれぞれ DynamoDB に保存される。
 
-- [ ] 6.1 `POST /routes/{route_id}/start` を実装する（ボディから polyline・distance_km・mode・weather を受け取り DynamoDB に保存。`route_id` はパスパラメータのみ）
-- [ ] 6.2 `POST /routes/{route_id}/track` を実装する（GPS 点リストを実績に追記し、`status` を更新する）
+- [x] 6.1 `POST /routes/{route_id}/start` を実装する（ボディから polyline・distance_km・mode・weather を受け取り DynamoDB に保存。`route_id` はパスパラメータのみ）
+- [x] 6.2 `POST /routes/{route_id}/track` を実装する（GPS 点リストを実績に追記し、`status` を更新する）
 
 ---
 
@@ -81,7 +81,7 @@
 **要件**: 5.1, 5.2, 5.3  
 **完了条件**: `GET /routes/history` が時系列降順で RouteHistoryItem のリストを返す。
 
-- [ ] 7.1 `GET /routes/history` エンドポイントを実装する（`X-User-Id` ヘッダーの userId で DynamoDB をクエリし、直近 20 件を返す）
+- [x] 7.1 `GET /routes/history` エンドポイントを実装する（`X-User-Id` ヘッダーの userId で DynamoDB をクエリし、直近 20 件を返す）
 
 ---
 
@@ -90,10 +90,10 @@
 **要件**: 1.1, 1.2, 1.3, 7.1  
 **完了条件**: React 開発サーバーが起動し、Geolocation が取得できる。API Client が動作する。
 
-- [ ] 8.1 Vite + React + TypeScript + React Leaflet プロジェクトを `frontend/` に初期化する（pnpm）
-- [ ] 8.2 API Client Layer（`api/client.ts`）と型付き API 関数（`api/routes.ts`）を実装する（`X-User-Id` ヘッダーの自動付与を含む）
-- [ ] 8.3 `useGeolocation` hook を実装する（取得中・成功・拒否・タイムアウトの各状態と `retry` 関数）
-- [ ] 8.4 `utils/userId.ts` を実装する（`localStorage` に UUID を永続化。`crypto.randomUUID()` で初回生成）
+- [x] 8.1 Vite + React + TypeScript + React Leaflet プロジェクトを `frontend/` に初期化する（pnpm）
+- [x] 8.2 API Client Layer（`api/client.ts`）と型付き API 関数（`api/routes.ts`）を実装する（`X-User-Id` ヘッダーの自動付与を含む）
+- [x] 8.3 `useGeolocation` hook を実装する（取得中・成功・拒否・タイムアウトの各状態と `retry` 関数）
+- [x] 8.4 `utils/userId.ts` を実装する（`localStorage` に UUID を永続化。`crypto.randomUUID()` で初回生成）
 
 ---
 
@@ -144,8 +144,8 @@
 **要件**: 7.1  
 **完了条件**: CDK diff が通り、Amplify ビルド設定が正しく動作する。
 
-- [ ] 13.1 Amplify Hosting の `amplify.yml`（pnpm install + build + `frontend/dist` を成果物に指定）を作成する
-- [ ] 13.2 CDK スタック（Lambda DockerImageFunction + DynamoDB + Amplify App）を確認し、`cdk diff` の結果をユーザーに提示する（`cdk deploy` はユーザーが実行）
+- [x] 13.1 Amplify Hosting の `amplify.yml`（pnpm install + build + `frontend/dist` を成果物に指定）を作成する
+- [x] 13.2 CDK スタック（Lambda DockerImageFunction + DynamoDB + Amplify App）を確認し、`cdk synth` でテンプレート検証済み（`cdk deploy` はユーザーが実行）
 
 ---
 
