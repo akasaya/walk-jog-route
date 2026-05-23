@@ -62,7 +62,7 @@ export class WalkJogRouteStack extends cdk.Stack {
     const fnUrl = fn.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
       cors: {
-        allowedOrigins: ["https://walk-jog-route.zantetebak.workers.dev"],
+        allowedOrigins: [this.node.getContext("frontendUrl") as string],
         allowedMethods: [lambda.HttpMethod.ALL],
         allowedHeaders: ["*"],
       },

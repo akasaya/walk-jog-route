@@ -2,7 +2,7 @@
 
 現在地から散歩・ジョギングコースを AI が提案するWebアプリ。
 
-**本番URL**: https://walk-jog-route.zantetebak.workers.dev
+**本番URL**: デプロイ後に Cloudflare Workers のダッシュボードで確認できます
 
 ---
 
