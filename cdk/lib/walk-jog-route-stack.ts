@@ -74,6 +74,15 @@ export class WalkJogRouteStack extends cdk.Stack {
       clientIds: ["sts.amazonaws.com"],
     });
 
+    const deployPolicy = new iam.ManagedPolicy(this, "DeployPolicy", {
+      statements: [
+        new iam.PolicyStatement({
+          actions: ["lambda:UpdateFunctionCode"],
+          resources: [fn.functionArn],
+        }),
+      ],
+    });
+
     const deployRole = new iam.Role(this, "DeployRole", {
       roleName: "walk-jog-route-deploy-role",
       assumedBy: new iam.WebIdentityPrincipal(
@@ -85,16 +94,7 @@ export class WalkJogRouteStack extends cdk.Stack {
           },
         },
       ),
-      inlinePolicies: {
-        LambdaDeploy: new iam.PolicyDocument({
-          statements: [
-            new iam.PolicyStatement({
-              actions: ["lambda:UpdateFunctionCode"],
-              resources: [fn.functionArn],
-            }),
-          ],
-        }),
-      },
+      managedPolicies: [deployPolicy],
     });
 
     // ── Outputs ───────────────────────────────────────────────────────────
