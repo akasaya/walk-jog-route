@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
 
@@ -43,6 +44,12 @@ export class WalkJogRouteStack extends cdk.Stack {
 
     // ── Lambda（Zip）+ Function URL ────────────────────────────────────────
     // コードは CI が function.zip でデプロイする（cdk deploy はプレースホルダーを使用）
+    new logs.LogGroup(this, "ApiFunctionLogGroup", {
+      logGroupName: "/aws/lambda/walk-jog-route-backend",
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     const fn = new lambda.Function(this, "ApiFunction", {
       functionName: "walk-jog-route-backend",
       runtime: lambda.Runtime.PYTHON_3_12,
