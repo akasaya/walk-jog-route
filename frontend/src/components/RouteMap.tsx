@@ -1,5 +1,5 @@
 import polylineDecode from "@mapbox/polyline";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -17,6 +17,24 @@ function MapController({ positions }: { positions: [number, number][] }) {
       map.fitBounds(positions);
     }
   }, [map, positions]);
+  return null;
+}
+
+function LocationController({
+  currentLocation,
+  hasRoute,
+}: {
+  currentLocation: { lat: number; lon: number } | null | undefined;
+  hasRoute: boolean;
+}) {
+  const map = useMap();
+  const hasCenteredRef = useRef(false);
+  useEffect(() => {
+    if (currentLocation && !hasCenteredRef.current && !hasRoute) {
+      hasCenteredRef.current = true;
+      map.setView([currentLocation.lat, currentLocation.lon], 14);
+    }
+  }, [map, currentLocation, hasRoute]);
   return null;
 }
 
@@ -46,16 +64,9 @@ export function RouteMap({ polyline, currentLocation }: RouteMapProps) {
     ? (polylineDecode.decode(polyline) as [number, number][])
     : [];
 
-  const center: [number, number] =
-    currentLocation
-      ? [currentLocation.lat, currentLocation.lon]
-      : positions.length > 0
-        ? positions[0]
-        : DEFAULT_CENTER;
-
   return (
     <MapContainer
-      center={center}
+      center={DEFAULT_CENTER}
       zoom={14}
       style={{ height: "100%", width: "100%", minHeight: "300px" }}
     >
@@ -69,6 +80,10 @@ export function RouteMap({ polyline, currentLocation }: RouteMapProps) {
           <MapController positions={positions} />
         </>
       )}
+      <LocationController
+        currentLocation={currentLocation}
+        hasRoute={positions.length > 0}
+      />
       {currentLocation && (
         <Marker position={[currentLocation.lat, currentLocation.lon]} />
       )}

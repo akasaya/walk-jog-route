@@ -13,7 +13,7 @@ vi.mock("react-leaflet", () => ({
   Marker: ({ position }: { position: [number, number] }) => (
     <div data-testid="marker" data-position={JSON.stringify(position)} />
   ),
-  useMap: () => ({ fitBounds: vi.fn() }),
+  useMap: vi.fn(() => ({ fitBounds: vi.fn(), setView: vi.fn() })),
 }));
 
 vi.mock("@mapbox/polyline", () => ({
@@ -23,12 +23,15 @@ vi.mock("@mapbox/polyline", () => ({
   },
 }));
 
+import { useMap } from "react-leaflet";
+
 describe("RouteMap", () => {
   beforeEach(() => {
     Object.defineProperty(navigator, "onLine", {
       configurable: true,
       value: true,
     });
+    vi.mocked(useMap).mockReturnValue({ fitBounds: vi.fn(), setView: vi.fn() });
   });
 
   it("renders map container when online", () => {
@@ -61,5 +64,19 @@ describe("RouteMap", () => {
   it("does not render marker when no currentLocation", () => {
     render(<RouteMap />);
     expect(screen.queryByTestId("marker")).not.toBeInTheDocument();
+  });
+
+  it("pans to current location when provided", () => {
+    const setView = vi.fn();
+    vi.mocked(useMap).mockReturnValue({ fitBounds: vi.fn(), setView });
+    render(<RouteMap currentLocation={{ lat: 35.0, lon: 139.0 }} />);
+    expect(setView).toHaveBeenCalledWith([35.0, 139.0], 14);
+  });
+
+  it("does not pan when currentLocation is null", () => {
+    const setView = vi.fn();
+    vi.mocked(useMap).mockReturnValue({ fitBounds: vi.fn(), setView });
+    render(<RouteMap currentLocation={null} />);
+    expect(setView).not.toHaveBeenCalled();
   });
 });

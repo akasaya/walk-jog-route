@@ -9,7 +9,7 @@ vi.mock("react-leaflet", () => ({
   TileLayer: () => <div data-testid="tile-layer" />,
   Polyline: () => <div data-testid="polyline" />,
   Marker: () => <div data-testid="marker" />,
-  useMap: () => ({ fitBounds: vi.fn() }),
+  useMap: () => ({ fitBounds: vi.fn(), setView: vi.fn() }),
 }));
 
 vi.mock("@mapbox/polyline", () => ({
