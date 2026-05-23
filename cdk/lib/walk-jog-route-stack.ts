@@ -1,10 +1,8 @@
 import * as cdk from "aws-cdk-lib";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import * as amplify from "aws-cdk-lib/aws-amplify";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
 
 const GITHUB_OWNER = "akasaya";
@@ -15,23 +13,18 @@ export class WalkJogRouteStack extends cdk.Stack {
     super(scope, id, props);
 
     // ── DynamoDB ────────────────────────────────────────────────────────────
-    // テーブルは初回デプロイ時に作成済み（RETAIN ポリシーのためロールバックされなかった）
     const table = dynamodb.Table.fromTableName(this, "RouteTable", "walk-jog-routes");
 
-    // ── ECR ─────────────────────────────────────────────────────────────────
-    // リポジトリは初回デプロイ前に手動作成済み（aws ecr create-repository）
-    const repo = ecr.Repository.fromRepositoryName(this, "AppRepo", "walk-jog-route");
-
-    // ── Secrets ──────────────────────────────────────────────────────────────
-    // Claude は Bedrock 経由のため API キー不要
-    const graphhopperApiKeySecret = new secretsmanager.Secret(
-      this,
-      "GraphhopperApiKey",
-      {
-        secretName: "walk-jog-route/graphhopper-api-key",
-        description: "GraphHopper Routing API Key",
-      },
-    );
+    // ── SSM Parameter（Secrets Manager の代替・$0/月）──────────────────────
+    // cdk deploy 後に実際の値を設定:
+    //   aws ssm put-parameter --name /walk-jog-route/graphhopper-api-key \
+    //     --value "YOUR_KEY" --type SecureString --overwrite --region ap-northeast-1
+    const apiKeyParam = new ssm.StringParameter(this, "GraphhopperApiKeyParam", {
+      parameterName: "/walk-jog-route/graphhopper-api-key",
+      stringValue: "PLACEHOLDER",
+      description: "GraphHopper Routing API Key",
+      tier: ssm.ParameterTier.STANDARD,
+    });
 
     // ── Lambda 実行ロール ──────────────────────────────────────────────────
     const lambdaRole = new iam.Role(this, "LambdaExecutionRole", {
@@ -43,31 +36,24 @@ export class WalkJogRouteStack extends cdk.Stack {
       ],
     });
     table.grantReadWriteData(lambdaRole);
-    graphhopperApiKeySecret.grantRead(lambdaRole);
     lambdaRole.addToPolicy(new iam.PolicyStatement({
-      actions: ["bedrock:InvokeModel"],
-      resources: ["*"],
-    }));
-    lambdaRole.addToPolicy(new iam.PolicyStatement({
-      actions: [
-        "aws-marketplace:ViewSubscriptions",
-        "aws-marketplace:Subscribe",
-        "aws-marketplace:Unsubscribe",
-      ],
-      resources: ["*"],
+      actions: ["ssm:GetParameter"],
+      resources: [apiKeyParam.parameterArn],
     }));
 
-    // ── Lambda (Container Image) + Function URL ────────────────────────────
-    const imageTag = process.env.IMAGE_TAG ?? "latest";
-    const fn = new lambda.DockerImageFunction(this, "ApiFunction", {
+    // ── Lambda（Zip）+ Function URL ────────────────────────────────────────
+    // コードは CI が function.zip でデプロイする（cdk deploy はプレースホルダーを使用）
+    const fn = new lambda.Function(this, "ApiFunction", {
       functionName: "walk-jog-route-api",
-      code: lambda.DockerImageCode.fromEcr(repo, { tagOrDigest: imageTag }),
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: "backend.main.handler",
+      code: lambda.Code.fromAsset("lambda_placeholder"),
       timeout: cdk.Duration.minutes(1),
       memorySize: 512,
       role: lambdaRole,
       environment: {
         ENV: "production",
-        GRAPHHOPPER_API_KEY_SECRET: graphhopperApiKeySecret.secretName,
+        GRAPHHOPPER_API_KEY_PARAM: apiKeyParam.parameterName,
       },
     });
 
@@ -98,22 +84,8 @@ export class WalkJogRouteStack extends cdk.Stack {
         },
       ),
       inlinePolicies: {
-        EcrAndLambdaDeploy: new iam.PolicyDocument({
+        LambdaDeploy: new iam.PolicyDocument({
           statements: [
-            new iam.PolicyStatement({
-              actions: ["ecr:GetAuthorizationToken"],
-              resources: ["*"],
-            }),
-            new iam.PolicyStatement({
-              actions: [
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:PutImage",
-                "ecr:InitiateLayerUpload",
-                "ecr:UploadLayerPart",
-                "ecr:CompleteLayerUpload",
-              ],
-              resources: [repo.repositoryArn],
-            }),
             new iam.PolicyStatement({
               actions: ["lambda:UpdateFunctionCode"],
               resources: [fn.functionArn],
@@ -121,46 +93,6 @@ export class WalkJogRouteStack extends cdk.Stack {
           ],
         }),
       },
-    });
-
-    // ── Amplify Hosting ───────────────────────────────────────────────────
-    // GitHub OAuth トークンを Secrets Manager に保存してから cdk deploy すること:
-    //   aws secretsmanager create-secret \
-    //     --name walk-jog-route/github-token \
-    //     --secret-string "<your-github-pat>"
-    const amplifyApp = new amplify.CfnApp(this, "FrontendApp", {
-      name: "walk-jog-route",
-      // amplify.yml をリポジトリルートから自動検出
-      buildSpec: [
-        "version: 1",
-        "frontend:",
-        "  phases:",
-        "    preBuild:",
-        "      commands:",
-        "        - cd frontend && pnpm install --frozen-lockfile",
-        "    build:",
-        "      commands:",
-        "        - pnpm build",
-        "  artifacts:",
-        "    baseDirectory: frontend/dist",
-        "    files:",
-        "      - '**/*'",
-        "  cache:",
-        "    paths:",
-        "      - frontend/node_modules/**/*",
-      ].join("\n"),
-      environmentVariables: [
-        {
-          name: "VITE_API_BASE_URL",
-          value: fnUrl.url,
-        },
-      ],
-    });
-
-    new amplify.CfnBranch(this, "MainBranch", {
-      appId: amplifyApp.attrAppId,
-      branchName: "main",
-      enableAutoBuild: true,
     });
 
     // ── Outputs ───────────────────────────────────────────────────────────
@@ -172,14 +104,8 @@ export class WalkJogRouteStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "DeployRoleArn", {
       value: deployRole.roleArn,
-      description:
-        "GitHub Actions deploy role — set as AWS_DEPLOY_ROLE_ARN in GitHub Secrets",
+      description: "GitHub Actions deploy role ARN",
       exportName: "WalkJogRouteDeployRoleArn",
-    });
-
-    new cdk.CfnOutput(this, "AmplifyAppId", {
-      value: amplifyApp.attrAppId,
-      description: "Amplify App ID",
     });
   }
 }

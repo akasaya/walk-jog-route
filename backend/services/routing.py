@@ -14,11 +14,11 @@ def _resolve_api_key() -> str:
     key = os.environ.get("GRAPHHOPPER_API_KEY", "")
     if key:
         return key
-    secret_name = os.environ.get("GRAPHHOPPER_API_KEY_SECRET", "")
-    if not secret_name:
+    param_name = os.environ.get("GRAPHHOPPER_API_KEY_PARAM", "")
+    if not param_name:
         return ""
-    client = boto3.client("secretsmanager", region_name="ap-northeast-1")
-    return client.get_secret_value(SecretId=secret_name)["SecretString"]
+    client = boto3.client("ssm", region_name="ap-northeast-1")
+    return client.get_parameter(Name=param_name, WithDecryption=True)["Parameter"]["Value"]
 
 
 class RoutingService:
