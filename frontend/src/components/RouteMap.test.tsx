@@ -31,7 +31,8 @@ describe("RouteMap", () => {
       configurable: true,
       value: true,
     });
-    vi.mocked(useMap).mockReturnValue({ fitBounds: vi.fn(), setView: vi.fn() });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(useMap).mockReturnValue({ fitBounds: vi.fn(), setView: vi.fn() } as any);
   });
 
   it("renders map container when online", () => {
@@ -68,14 +69,16 @@ describe("RouteMap", () => {
 
   it("pans to current location when provided", () => {
     const setView = vi.fn();
-    vi.mocked(useMap).mockReturnValue({ fitBounds: vi.fn(), setView });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(useMap).mockReturnValue({ fitBounds: vi.fn(), setView } as any);
     render(<RouteMap currentLocation={{ lat: 35.0, lon: 139.0 }} />);
     expect(setView).toHaveBeenCalledWith([35.0, 139.0], 14);
   });
 
   it("does not pan when currentLocation is null", () => {
     const setView = vi.fn();
-    vi.mocked(useMap).mockReturnValue({ fitBounds: vi.fn(), setView });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(useMap).mockReturnValue({ fitBounds: vi.fn(), setView } as any);
     render(<RouteMap currentLocation={null} />);
     expect(setView).not.toHaveBeenCalled();
   });
