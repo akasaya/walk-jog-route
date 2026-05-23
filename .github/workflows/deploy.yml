@@ -79,8 +79,8 @@ jobs:
         working-directory: frontend
       - run: pnpm build
         working-directory: frontend
-      - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy frontend/dist --project-name walk-jog-route
+      - name: Deploy to Cloudflare
+        run: cd frontend && npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
