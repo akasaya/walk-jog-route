@@ -44,7 +44,7 @@ export class WalkJogRouteStack extends cdk.Stack {
     // ── Lambda（Zip）+ Function URL ────────────────────────────────────────
     // コードは CI が function.zip でデプロイする（cdk deploy はプレースホルダーを使用）
     const fn = new lambda.Function(this, "ApiFunction", {
-      functionName: "walk-jog-route-api",
+      functionName: "walk-jog-route-backend",
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: "backend.main.handler",
       code: lambda.Code.fromAsset("lambda_placeholder"),
