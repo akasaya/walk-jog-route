@@ -11,7 +11,9 @@ HEADERS = {"X-User-Id": "user-123"}
 
 MOCK_HISTORY = [
     {
-        "route_id": "r1",
+        "userId": "user-123",
+        "SK": "2026-05-19T09:00:00#r1",
+        "routeId": "r1",
         "started_at": "2026-05-19T09:00:00",
         "mode": "walk",
         "distance_km": 4.0,
@@ -19,7 +21,9 @@ MOCK_HISTORY = [
         "polyline": "enc1",
     },
     {
-        "route_id": "r2",
+        "userId": "user-123",
+        "SK": "2026-05-18T08:00:00#r2",
+        "routeId": "r2",
         "started_at": "2026-05-18T08:00:00",
         "mode": "jog",
         "distance_km": 8.0,
