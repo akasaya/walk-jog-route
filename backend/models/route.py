@@ -23,7 +23,7 @@ class WaypointItem(BaseModel):
 class RouteWaypoints(BaseModel):
     """Claude API 構造化出力スキーマ"""
 
-    waypoints: list[WaypointItem]
+    waypoints: list[WaypointItem] = Field(max_length=3)
     reasoning: str
 
 

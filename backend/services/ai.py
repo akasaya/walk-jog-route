@@ -33,9 +33,9 @@ class AIService:
     def __init__(
         self,
         client=None,
-        model: str = "apac.anthropic.claude-3-5-sonnet-20241022-v2:0",
+        model: str = "us.anthropic.claude-haiku-4-5-20251001-v1:0",
     ):
-        self._client = client or boto3.client("bedrock-runtime", region_name="ap-northeast-1")
+        self._client = client or boto3.client("bedrock-runtime", region_name="us-east-1")
         self._model = model
 
     def generate_waypoints(
@@ -88,7 +88,7 @@ class AIService:
 {_build_history_summary(history)}
 
 ## 指示
-- 現在地から {search_radius_km}km 程度の範囲内で経由地を 2〜4 点選ぶ
+- 現在地から {search_radius_km}km 程度の範囲内で経由地を 2〜3 点選ぶ
 - 過去に通行した方角・エリアとは異なるエリアを優先する
 - スタート地点に戻れる周回ルートになるよう経由地を配置する\
 """

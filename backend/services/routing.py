@@ -1,5 +1,7 @@
+import functools
 import os
 
+import boto3
 import httpx
 
 from backend.models.route import WaypointItem
@@ -7,9 +9,21 @@ from backend.models.route import WaypointItem
 _GRAPHHOPPER_URL = "https://graphhopper.com/api/1/route"
 
 
+@functools.lru_cache(maxsize=1)
+def _resolve_api_key() -> str:
+    key = os.environ.get("GRAPHHOPPER_API_KEY", "")
+    if key:
+        return key
+    secret_name = os.environ.get("GRAPHHOPPER_API_KEY_SECRET", "")
+    if not secret_name:
+        return ""
+    client = boto3.client("secretsmanager", region_name="ap-northeast-1")
+    return client.get_secret_value(SecretId=secret_name)["SecretString"]
+
+
 class RoutingService:
     def __init__(self, api_key: str | None = None):
-        self._api_key = api_key or os.environ.get("GRAPHHOPPER_API_KEY", "")
+        self._api_key = api_key or _resolve_api_key()
 
     async def generate_route(
         self,

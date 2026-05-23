@@ -51,8 +51,9 @@ async def suggest_route(
         return await asyncio.wait_for(svc.suggest(body, x_user_id), timeout=28.0)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=503, detail="Request timed out")
-    except (httpx.TimeoutException, httpx.HTTPStatusError):
+    except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
+        logger.error("External service error: %s: %s", type(e).__name__, e)
         raise HTTPException(status_code=503, detail="External service unavailable")
-    except Exception:
-        logger.exception("Unexpected error in suggest_route")
+    except Exception as e:
+        logger.exception("Unexpected error in suggest_route: %s: %s", type(e).__name__, e)
         raise HTTPException(status_code=503, detail="Service unavailable")

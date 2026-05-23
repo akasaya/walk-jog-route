@@ -48,6 +48,14 @@ export class WalkJogRouteStack extends cdk.Stack {
       actions: ["bedrock:InvokeModel"],
       resources: ["*"],
     }));
+    lambdaRole.addToPolicy(new iam.PolicyStatement({
+      actions: [
+        "aws-marketplace:ViewSubscriptions",
+        "aws-marketplace:Subscribe",
+        "aws-marketplace:Unsubscribe",
+      ],
+      resources: ["*"],
+    }));
 
     // ── Lambda (Container Image) + Function URL ────────────────────────────
     const imageTag = process.env.IMAGE_TAG ?? "latest";
