@@ -53,7 +53,7 @@ class TestSaveRoute:
             weather=None,
         )
         call_args = table.put_item.call_args[1]["Item"]
-        assert call_args["weather"] is None
+        assert "weather" not in call_args
 
 
 class TestGetRecent:
