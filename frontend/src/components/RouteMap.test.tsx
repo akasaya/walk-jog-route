@@ -18,7 +18,7 @@ vi.mock("react-leaflet", () => ({
 
 vi.mock("@mapbox/polyline", () => ({
   default: {
-    decode: (_encoded: string) =>
+    decode: () =>
       [[35.0, 139.0], [35.1, 139.1], [35.0, 139.0]] as [number, number][],
   },
 }));
