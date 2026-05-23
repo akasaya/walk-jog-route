@@ -6,12 +6,11 @@ const LOCATION = { lat: 35.0, lon: 139.0 };
 const noop = () => {};
 
 describe("RouteRequestForm", () => {
-  it("renders distance slider with correct range", () => {
+  it("renders distance preset chips", () => {
     render(<RouteRequestForm currentLocation={LOCATION} onSubmit={noop} isLoading={false} />);
-    const slider = screen.getByRole("slider");
-    expect(slider).toHaveAttribute("min", "0.5");
-    expect(slider).toHaveAttribute("max", "50");
-    expect(slider).toHaveAttribute("step", "0.5");
+    expect(screen.getByRole("button", { name: "2km" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "5km" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "10km" })).toBeInTheDocument();
   });
 
   it("renders walk and jog mode buttons", () => {

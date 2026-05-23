@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import type { RouteRequest } from "../types/route";
 
 interface RouteRequestFormProps {
@@ -6,6 +6,8 @@ interface RouteRequestFormProps {
   onSubmit: (request: RouteRequest) => void;
   isLoading: boolean;
 }
+
+const DISTANCE_OPTIONS = [2, 3, 5, 8, 10];
 
 export function RouteRequestForm({ currentLocation, onSubmit, isLoading }: RouteRequestFormProps) {
   const [distanceKm, setDistanceKm] = useState(5);
@@ -16,7 +18,7 @@ export function RouteRequestForm({ currentLocation, onSubmit, isLoading }: Route
   const showManualInput = !currentLocation;
   const canSubmit = !isLoading && (!showManualInput || (manualLat !== "" && manualLon !== ""));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const lat = currentLocation ? currentLocation.lat : parseFloat(manualLat);
     const lon = currentLocation ? currentLocation.lon : parseFloat(manualLon);
@@ -25,61 +27,76 @@ export function RouteRequestForm({ currentLocation, onSubmit, isLoading }: Route
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       {showManualInput && (
-        <div>
-          <label>
-            緯度
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+          <div>
+            <label className="form-label" htmlFor="manual-lat">緯度</label>
             <input
+              id="manual-lat"
+              className="input-field"
               type="number"
               step="any"
+              placeholder="35.6895"
               value={manualLat}
               onChange={(e) => setManualLat(e.target.value)}
             />
-          </label>
-          <label>
-            経度
+          </div>
+          <div>
+            <label className="form-label" htmlFor="manual-lon">経度</label>
             <input
+              id="manual-lon"
+              className="input-field"
               type="number"
               step="any"
+              placeholder="139.6917"
               value={manualLon}
               onChange={(e) => setManualLon(e.target.value)}
             />
-          </label>
+          </div>
         </div>
       )}
 
-      <label>
-        距離: {distanceKm}km
-        <input
-          type="range"
-          min={0.5}
-          max={50}
-          step={0.5}
-          value={distanceKm}
-          onChange={(e) => setDistanceKm(parseFloat(e.target.value))}
-        />
-      </label>
-
       <div>
-        <button
-          type="button"
-          onClick={() => setMode("walk")}
-          aria-pressed={mode === "walk"}
-        >
-          ウォーキング
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("jog")}
-          aria-pressed={mode === "jog"}
-        >
-          ジョギング
-        </button>
+        <span className="form-label">距離</span>
+        <div className="chip-group">
+          {DISTANCE_OPTIONS.map((km) => (
+            <button
+              key={km}
+              type="button"
+              className={`chip${distanceKm === km ? " chip--active" : ""}`}
+              onClick={() => setDistanceKm(km)}
+            >
+              {km}km
+            </button>
+          ))}
+        </div>
       </div>
 
-      <button type="submit" disabled={!canSubmit}>
-        {isLoading ? "提案中..." : "コースを提案"}
+      <div>
+        <span className="form-label">モード</span>
+        <div className="mode-toggle">
+          <button
+            type="button"
+            className={`mode-btn${mode === "walk" ? " mode-btn--active" : ""}`}
+            aria-pressed={mode === "walk"}
+            onClick={() => setMode("walk")}
+          >
+            🚶 ウォーキング
+          </button>
+          <button
+            type="button"
+            className={`mode-btn${mode === "jog" ? " mode-btn--active" : ""}`}
+            aria-pressed={mode === "jog"}
+            onClick={() => setMode("jog")}
+          >
+            🏃 ジョギング
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" className="btn-primary" disabled={!canSubmit}>
+        {isLoading ? "提案中…" : "コースを提案"}
       </button>
     </form>
   );

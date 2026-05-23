@@ -8,6 +8,8 @@ interface ActiveRouteProps {
   onFinish: () => void;
 }
 
+const MODE_ICON: Record<Mode, string> = { walk: "🚶", jog: "🏃" };
+
 export function ActiveRoute({ suggestion, mode, onFinish }: ActiveRouteProps) {
   const tracking = useRouteTracking({
     routeId: suggestion.route_id,
@@ -28,17 +30,30 @@ export function ActiveRoute({ suggestion, mode, onFinish }: ActiveRouteProps) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+    <div className="screen">
+      <div className="screen-header">
+        <span className="screen-header__title">
+          {MODE_ICON[mode]} ルート中
+        </span>
+      </div>
+
       {tracking.error && (
-        <div role="alert" style={{ padding: "0.5rem", color: "red" }}>
+        <div className="alert alert--error" role="alert">
           {tracking.error}
         </div>
       )}
 
-      <div style={{ padding: "0.5rem" }}>
-        <span>{(suggestion.distance_m / 1000).toFixed(1)} km</span>
-        {" / "}
-        <span>{suggestion.estimated_minutes} 分</span>
+      <div style={{ padding: "0.75rem 1rem" }}>
+        <div className="stats-grid">
+          <div className="stat-card">
+            <p className="stat-card__label">距離</p>
+            <p className="stat-card__value">{(suggestion.distance_m / 1000).toFixed(1)} km</p>
+          </div>
+          <div className="stat-card">
+            <p className="stat-card__label">目安時間</p>
+            <p className="stat-card__value">{suggestion.estimated_minutes} 分</p>
+          </div>
+        </div>
       </div>
 
       <div style={{ flex: 1 }}>
@@ -48,17 +63,17 @@ export function ActiveRoute({ suggestion, mode, onFinish }: ActiveRouteProps) {
         />
       </div>
 
-      <div style={{ padding: "0.5rem", display: "flex", gap: "0.5rem" }}>
+      <div style={{ padding: "0.75rem 1rem", display: "flex", gap: "0.5rem" }}>
         {!tracking.isStarted ? (
-          <button type="button" onClick={tracking.start}>
+          <button type="button" className="btn-primary" onClick={tracking.start}>
             開始
           </button>
         ) : (
           <>
-            <button type="button" onClick={handleComplete}>
+            <button type="button" className="btn-primary" onClick={handleComplete}>
               完了
             </button>
-            <button type="button" onClick={handleAbandon}>
+            <button type="button" className="btn-outline" onClick={handleAbandon}>
               中断
             </button>
           </>

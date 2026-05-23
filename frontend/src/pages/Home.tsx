@@ -42,47 +42,51 @@ export function Home({ onStartRoute, onGoHistory }: HomeProps) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+    <div className="screen">
+      <div className="screen-header">
+        <span className="screen-header__title">🗺 walk-jog-route</span>
+        {onGoHistory && (
+          <button type="button" className="btn-ghost" onClick={onGoHistory}>
+            履歴
+          </button>
+        )}
+      </div>
+
       {geo.loading && (
-        <p aria-live="polite" style={{ padding: "0.5rem" }}>
-          位置情報を取得中...
-        </p>
+        <div className="alert alert--info" aria-live="polite">
+          位置情報を取得中…
+        </div>
       )}
       {geo.error === "denied" && (
-        <p role="alert" style={{ padding: "0.5rem", color: "orange" }}>
-          位置情報の許可が必要です。手動で座標を入力してください。
-        </p>
+        <div className="alert alert--error" role="alert">
+          位置情報の許可が必要です。座標を手動入力してください。
+        </div>
       )}
       {error && (
-        <div role="alert" style={{ padding: "0.5rem", color: "red" }}>
+        <div className="alert alert--error" role="alert">
           {error}
         </div>
       )}
 
-      {onGoHistory && (
-        <div style={{ padding: "0 0.5rem" }}>
-          <button type="button" onClick={onGoHistory}>
-            履歴を見る
-          </button>
+      <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        <div className="card">
+          <RouteRequestForm
+            currentLocation={currentLocation}
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
         </div>
-      )}
 
-      <RouteRequestForm
-        currentLocation={currentLocation}
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-      />
-
-      {suggestion && onStartRoute && (
-        <div style={{ padding: "0.5rem" }}>
+        {suggestion && onStartRoute && (
           <button
             type="button"
+            className="btn-primary"
             onClick={() => onStartRoute(suggestion, lastMode)}
           >
-            ルートを開始
+            ルートを開始 →
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div style={{ flex: 1 }}>
         <RouteMap
