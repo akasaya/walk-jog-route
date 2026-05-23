@@ -44,12 +44,6 @@ export class WalkJogRouteStack extends cdk.Stack {
 
     // ── Lambda（Zip）+ Function URL ────────────────────────────────────────
     // コードは CI が function.zip でデプロイする（cdk deploy はプレースホルダーを使用）
-    new logs.LogGroup(this, "ApiFunctionLogGroup", {
-      logGroupName: "/aws/lambda/walk-jog-route-backend",
-      retention: logs.RetentionDays.ONE_MONTH,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
-
     const fn = new lambda.Function(this, "ApiFunction", {
       functionName: "walk-jog-route-backend",
       runtime: lambda.Runtime.PYTHON_3_12,
@@ -58,6 +52,7 @@ export class WalkJogRouteStack extends cdk.Stack {
       timeout: cdk.Duration.minutes(1),
       memorySize: 512,
       role: lambdaRole,
+      logRetention: logs.RetentionDays.ONE_MONTH,
       environment: {
         ENV: "production",
         GRAPHHOPPER_API_KEY_PARAM: apiKeyParam.parameterName,
