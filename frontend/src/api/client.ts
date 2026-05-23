@@ -1,6 +1,6 @@
 import { getUserId } from "../utils/userId";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 export class ApiError extends Error {
   readonly status: number;
