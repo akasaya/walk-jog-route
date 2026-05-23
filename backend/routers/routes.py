@@ -6,7 +6,6 @@ from fastapi import APIRouter, Header, HTTPException, Request
 
 from backend.limiter import limiter
 from backend.models.route import RouteRequest, RouteSuggestionResponse
-from backend.services.ai import AIService
 from backend.services.history import HistoryService
 from backend.services.route import RouteService
 from backend.services.routing import RoutingService
@@ -26,7 +25,6 @@ def _get_route_service() -> RouteService:
         _route_service = RouteService(
             weather_service=WeatherService(),
             history_service=HistoryService(),
-            ai_service=AIService(),
             routing_service=RoutingService(),
         )
     return _route_service

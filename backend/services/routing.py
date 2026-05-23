@@ -22,6 +22,37 @@ def _resolve_api_key() -> str:
 
 
 class RoutingService:
+    async def generate_round_trip(
+        self,
+        origin_lat: float,
+        origin_lon: float,
+        target_distance_m: int,
+        profile: str,
+        seed: int = 0,
+    ) -> tuple[str, int, int]:
+        """GraphHopper の round_trip アルゴリズムで周回ルートを生成する。
+        起点に必ず戻り、指定距離に近いルートを返す。
+        """
+        params: list[tuple[str, str | int | float | bool | None]] = [
+            ("point", f"{origin_lat},{origin_lon}"),
+            ("profile", profile),
+            ("algorithm", "round_trip"),
+            ("round_trip.distance", target_distance_m),
+            ("round_trip.seed", seed),
+            ("key", self._api_key),
+        ]
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.get(_GRAPHHOPPER_URL, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+        path = data["paths"][0]
+        polyline: str = path["points"]
+        distance_m: int = int(path["distance"])
+        estimated_minutes: int = int(path["time"] / 60_000)
+        return polyline, distance_m, estimated_minutes
+
+
     def __init__(self, api_key: str | None = None):
         self._api_key = api_key or _resolve_api_key()
 
