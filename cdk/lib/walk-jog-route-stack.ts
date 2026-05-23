@@ -15,21 +15,12 @@ export class WalkJogRouteStack extends cdk.Stack {
     super(scope, id, props);
 
     // ── DynamoDB ────────────────────────────────────────────────────────────
-    const table = new dynamodb.Table(this, "RouteTable", {
-      tableName: "walk-jog-routes",
-      partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
-      sortKey: { name: "SK", type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
-    });
+    // テーブルは初回デプロイ時に作成済み（RETAIN ポリシーのためロールバックされなかった）
+    const table = dynamodb.Table.fromTableName(this, "RouteTable", "walk-jog-routes");
 
     // ── ECR ─────────────────────────────────────────────────────────────────
-    const repo = new ecr.Repository(this, "AppRepo", {
-      repositoryName: "walk-jog-route",
-      lifecycleRules: [{ maxImageCount: 5 }],
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    // リポジトリは初回デプロイ前に手動作成済み（aws ecr create-repository）
+    const repo = ecr.Repository.fromRepositoryName(this, "AppRepo", "walk-jog-route");
 
     // ── Secrets ──────────────────────────────────────────────────────────────
     const claudeApiKeySecret = new secretsmanager.Secret(
@@ -80,7 +71,7 @@ export class WalkJogRouteStack extends cdk.Stack {
     const fnUrl = fn.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
       cors: {
-        allowedOrigins: ["https://*.amplifyapp.com"],
+        allowedOrigins: ["*"],
         allowedMethods: [lambda.HttpMethod.ALL],
         allowedHeaders: ["*"],
       },
