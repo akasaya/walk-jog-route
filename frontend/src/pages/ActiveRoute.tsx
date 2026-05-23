@@ -65,16 +65,21 @@ export function ActiveRoute({ suggestion, mode, onFinish }: ActiveRouteProps) {
 
       <div style={{ padding: "0.75rem 1rem", display: "flex", gap: "0.5rem" }}>
         {!tracking.isStarted ? (
-          <button type="button" className="btn-primary" onClick={tracking.start}>
-            開始
-          </button>
+          <>
+            <button type="button" className="btn-outline" onClick={onFinish}>
+              キャンセル
+            </button>
+            <button type="button" className="btn-primary" style={{ flex: 1 }} onClick={tracking.start}>
+              開始
+            </button>
+          </>
         ) : (
           <>
-            <button type="button" className="btn-primary" onClick={handleComplete}>
-              完了
-            </button>
             <button type="button" className="btn-outline" onClick={handleAbandon}>
               中断
+            </button>
+            <button type="button" className="btn-primary" style={{ flex: 1 }} onClick={handleComplete}>
+              完了
             </button>
           </>
         )}

@@ -32,7 +32,30 @@ class RoutingService:
     ) -> tuple[str, int, int]:
         """GraphHopper の round_trip アルゴリズムで周回ルートを生成する。
         起点に必ず戻り、指定距離に近いルートを返す。
+        15% 以上ずれた場合は補正距離で 1 回リトライする。
         """
+        polyline, distance_m, minutes = await self._call_round_trip(
+            origin_lat, origin_lon, target_distance_m, profile, seed
+        )
+
+        if abs(distance_m / target_distance_m - 1.0) > 0.15:
+            adjusted = int(target_distance_m * target_distance_m / distance_m)
+            r2_poly, r2_dist, r2_min = await self._call_round_trip(
+                origin_lat, origin_lon, adjusted, profile, seed
+            )
+            if abs(r2_dist - target_distance_m) < abs(distance_m - target_distance_m):
+                return r2_poly, r2_dist, r2_min
+
+        return polyline, distance_m, minutes
+
+    async def _call_round_trip(
+        self,
+        origin_lat: float,
+        origin_lon: float,
+        target_distance_m: int,
+        profile: str,
+        seed: int,
+    ) -> tuple[str, int, int]:
         params: list[tuple[str, str | int | float | bool | None]] = [
             ("point", f"{origin_lat},{origin_lon}"),
             ("profile", profile),
