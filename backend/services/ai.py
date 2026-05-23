@@ -1,4 +1,4 @@
-import anthropic
+import boto3
 
 from backend.models.route import RouteHistoryItem, RouteWaypoints, WeatherData
 
@@ -9,6 +9,8 @@ _SYSTEM_PROMPT = """\
 過去に通行した方角・エリアとは異なるエリアを優先してください。
 reasoning に選んだ理由を日本語で記述してください。\
 """
+
+_TOOL_NAME = "route_waypoints"
 
 
 def _build_history_summary(history: list[RouteHistoryItem]) -> str:
@@ -30,10 +32,10 @@ def _build_weather_summary(weather: WeatherData | None) -> str:
 class AIService:
     def __init__(
         self,
-        client: anthropic.Anthropic | None = None,
-        model: str = "claude-sonnet-4-6",
+        client=None,
+        model: str = "apac.anthropic.claude-3-5-sonnet-20241022-v2:0",
     ):
-        self._client = client or anthropic.Anthropic()
+        self._client = client or boto3.client("bedrock-runtime", region_name="ap-northeast-1")
         self._model = model
 
     def generate_waypoints(
@@ -46,14 +48,23 @@ class AIService:
         weather: WeatherData | None,
     ) -> RouteWaypoints:
         prompt = self._build_user_prompt(lat, lon, distance_km, mode, weather, history)
-        message = self._client.messages.parse(
-            model=self._model,
-            max_tokens=1024,
-            system=_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
-            output_format=RouteWaypoints,
+        response = self._client.converse(
+            modelId=self._model,
+            system=[{"text": _SYSTEM_PROMPT}],
+            messages=[{"role": "user", "content": [{"text": prompt}]}],
+            toolConfig={
+                "tools": [{
+                    "toolSpec": {
+                        "name": _TOOL_NAME,
+                        "description": "提案する経由地リストと理由を返す",
+                        "inputSchema": {"json": RouteWaypoints.model_json_schema()},
+                    }
+                }],
+                "toolChoice": {"tool": {"name": _TOOL_NAME}},
+            },
         )
-        return message.parsed  # type: ignore[attr-defined]
+        tool_input = response["output"]["message"]["content"][0]["toolUse"]["input"]
+        return RouteWaypoints(**tool_input)
 
     def _build_user_prompt(
         self,
@@ -64,7 +75,6 @@ class AIService:
         weather: WeatherData | None,
         history: list[RouteHistoryItem],
     ) -> str:
-        # 座標は1桁精度に丸める（セキュリティルール 7.4）
         lat_r = round(lat, 1)
         lon_r = round(lon, 1)
         search_radius_km = round(distance_km / 4, 1)

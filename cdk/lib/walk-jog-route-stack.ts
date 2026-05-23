@@ -23,14 +23,7 @@ export class WalkJogRouteStack extends cdk.Stack {
     const repo = ecr.Repository.fromRepositoryName(this, "AppRepo", "walk-jog-route");
 
     // ── Secrets ──────────────────────────────────────────────────────────────
-    const claudeApiKeySecret = new secretsmanager.Secret(
-      this,
-      "ClaudeApiKey",
-      {
-        secretName: "walk-jog-route/claude-api-key",
-        description: "Anthropic Claude API Key",
-      },
-    );
+    // Claude は Bedrock 経由のため API キー不要
     const graphhopperApiKeySecret = new secretsmanager.Secret(
       this,
       "GraphhopperApiKey",
@@ -50,8 +43,11 @@ export class WalkJogRouteStack extends cdk.Stack {
       ],
     });
     table.grantReadWriteData(lambdaRole);
-    claudeApiKeySecret.grantRead(lambdaRole);
     graphhopperApiKeySecret.grantRead(lambdaRole);
+    lambdaRole.addToPolicy(new iam.PolicyStatement({
+      actions: ["bedrock:InvokeModel"],
+      resources: ["*"],
+    }));
 
     // ── Lambda (Container Image) + Function URL ────────────────────────────
     const imageTag = process.env.IMAGE_TAG ?? "latest";
@@ -63,7 +59,6 @@ export class WalkJogRouteStack extends cdk.Stack {
       role: lambdaRole,
       environment: {
         ENV: "production",
-        CLAUDE_API_KEY_SECRET: claudeApiKeySecret.secretName,
         GRAPHHOPPER_API_KEY_SECRET: graphhopperApiKeySecret.secretName,
       },
     });
