@@ -8,6 +8,7 @@ class RouteRequest(BaseModel):
     lon: float = Field(ge=-180, le=180)
     distance_km: float = Field(ge=0.5, le=50)
     mode: Literal["walk", "jog"]
+    route_type: Literal["loop", "one_way"] = "loop"
 
 
 class WeatherData(BaseModel):

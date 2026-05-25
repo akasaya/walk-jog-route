@@ -38,6 +38,7 @@ describe("RouteRequestForm", () => {
       lon: 139.0,
       distance_km: 5,
       mode: "walk",
+      route_type: "loop",
     });
   });
 

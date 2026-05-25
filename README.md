@@ -2,7 +2,11 @@
 
 現在地から散歩・ジョギングコースを AI が提案するWebアプリ。
 
-**本番URL**: デプロイ後に Cloudflare Workers のダッシュボードで確認できます
+**本番URL**: https://walk-jog-route.lemonnet.workers.dev/
+
+| モバイル | デスクトップ |
+|---------|------------|
+| ![モバイル画面](home-mobile.png) | ![デスクトップ画面](home-sidebar-layout.png) |
 
 ---
 

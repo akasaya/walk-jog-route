@@ -1,10 +1,25 @@
 import functools
+import math
 import os
 
 import boto3
 import httpx
 
 from backend.models.route import WaypointItem
+
+
+def _destination_point(lat: float, lon: float, distance_m: float, bearing_deg: float) -> tuple[float, float]:
+    R = 6_371_000
+    lat_r, lon_r, b_r = math.radians(lat), math.radians(lon), math.radians(bearing_deg)
+    lat2 = math.asin(
+        math.sin(lat_r) * math.cos(distance_m / R)
+        + math.cos(lat_r) * math.sin(distance_m / R) * math.cos(b_r)
+    )
+    lon2 = lon_r + math.atan2(
+        math.sin(b_r) * math.sin(distance_m / R) * math.cos(lat_r),
+        math.cos(distance_m / R) - math.sin(lat_r) * math.sin(lat2),
+    )
+    return math.degrees(lat2), math.degrees(lon2)
 
 _GRAPHHOPPER_URL = "https://graphhopper.com/api/1/route"
 
@@ -78,6 +93,30 @@ class RoutingService:
 
     def __init__(self, api_key: str | None = None):
         self._api_key = api_key or _resolve_api_key()
+
+    async def generate_one_way(
+        self,
+        origin_lat: float,
+        origin_lon: float,
+        target_distance_m: int,
+        profile: str,
+        seed: int = 0,
+    ) -> tuple[str, int, int]:
+        """指定距離の片道ルートを生成する。起点には戻らない。"""
+        bearing = (seed * 37 + 45) % 360
+        dest_lat, dest_lon = _destination_point(origin_lat, origin_lon, target_distance_m, bearing)
+        params: list[tuple[str, str | int | float | bool | None]] = [
+            ("point", f"{origin_lat},{origin_lon}"),
+            ("point", f"{dest_lat},{dest_lon}"),
+            ("profile", profile),
+            ("key", self._api_key),
+        ]
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.get(_GRAPHHOPPER_URL, params=params)
+            response.raise_for_status()
+            data = response.json()
+        path = data["paths"][0]
+        return str(path["points"]), int(path["distance"]), int(path["time"] / 60_000)
 
     async def generate_route(
         self,

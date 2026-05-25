@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import type { RouteRequest } from "../types/route";
+import type { RouteRequest, RouteType } from "../types/route";
 
 interface RouteRequestFormProps {
   currentLocation: { lat: number; lon: number } | null;
@@ -12,6 +12,7 @@ const DISTANCE_OPTIONS = [2, 3, 5, 8, 10];
 export function RouteRequestForm({ currentLocation, onSubmit, isLoading }: RouteRequestFormProps) {
   const [distanceKm, setDistanceKm] = useState(5);
   const [mode, setMode] = useState<"walk" | "jog">("walk");
+  const [routeType, setRouteType] = useState<RouteType>("loop");
   const [manualLat, setManualLat] = useState("");
   const [manualLon, setManualLon] = useState("");
 
@@ -23,7 +24,7 @@ export function RouteRequestForm({ currentLocation, onSubmit, isLoading }: Route
     const lat = currentLocation ? currentLocation.lat : parseFloat(manualLat);
     const lon = currentLocation ? currentLocation.lon : parseFloat(manualLon);
     if (isNaN(lat) || isNaN(lon)) return;
-    onSubmit({ lat, lon, distance_km: distanceKm, mode });
+    onSubmit({ lat, lon, distance_km: distanceKm, mode, route_type: routeType });
   };
 
   return (
@@ -91,6 +92,28 @@ export function RouteRequestForm({ currentLocation, onSubmit, isLoading }: Route
             onClick={() => setMode("jog")}
           >
             🏃 ジョギング
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <span className="form-label">コースタイプ</span>
+        <div className="mode-toggle">
+          <button
+            type="button"
+            className={`mode-btn${routeType === "loop" ? " mode-btn--active" : ""}`}
+            aria-pressed={routeType === "loop"}
+            onClick={() => setRouteType("loop")}
+          >
+            🔄 周回
+          </button>
+          <button
+            type="button"
+            className={`mode-btn${routeType === "one_way" ? " mode-btn--active" : ""}`}
+            aria-pressed={routeType === "one_way"}
+            onClick={() => setRouteType("one_way")}
+          >
+            ➡️ 片道
           </button>
         </div>
       </div>

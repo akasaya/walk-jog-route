@@ -1,10 +1,12 @@
 export type Mode = "walk" | "jog";
+export type RouteType = "loop" | "one_way";
 
 export interface RouteRequest {
   lat: number;
   lon: number;
   distance_km: number;
   mode: Mode;
+  route_type: RouteType;
 }
 
 export interface WaypointItem {

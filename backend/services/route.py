@@ -27,13 +27,14 @@ class RouteService:
         # user_id ごとに異なるルートを生成するシード（同じユーザーは毎回少し違うルート）
         seed = hash(user_id) % 100
 
-        polyline, distance_m, estimated_minutes = await self._routing.generate_round_trip(
-            request.lat,
-            request.lon,
-            target_distance_m,
-            "foot",
-            seed,
-        )
+        if request.route_type == "one_way":
+            polyline, distance_m, estimated_minutes = await self._routing.generate_one_way(
+                request.lat, request.lon, target_distance_m, "foot", seed
+            )
+        else:
+            polyline, distance_m, estimated_minutes = await self._routing.generate_round_trip(
+                request.lat, request.lon, target_distance_m, "foot", seed
+            )
 
         return RouteSuggestionResponse(
             route_id=str(uuid.uuid4()),
