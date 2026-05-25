@@ -4,6 +4,8 @@
 
 **本番URL**: https://walk-jog-route.lemonnet.workers.dev/
 
+![スクリーンショット](docs/screenshot.png)
+
 ---
 
 ## 機能
