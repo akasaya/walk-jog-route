@@ -4,10 +4,6 @@
 
 **本番URL**: https://walk-jog-route.lemonnet.workers.dev/
 
-| モバイル | デスクトップ |
-|---------|------------|
-| ![モバイル画面](home-mobile.png) | ![デスクトップ画面](home-sidebar-layout.png) |
-
 ---
 
 ## 機能

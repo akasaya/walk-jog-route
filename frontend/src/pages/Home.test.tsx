@@ -10,6 +10,7 @@ vi.mock("react-leaflet", () => ({
   Polyline: () => <div data-testid="polyline" />,
   Marker: () => <div data-testid="marker" />,
   useMap: () => ({ fitBounds: vi.fn(), setView: vi.fn() }),
+  useMapEvents: () => null,
 }));
 
 vi.mock("@mapbox/polyline", () => ({
@@ -49,12 +50,12 @@ describe("Home", () => {
     expect(screen.getByRole("button", { name: /コースを提案/ })).toBeInTheDocument();
   });
 
-  it("shows location loading message when geolocation is loading", () => {
+  it("shows loading state when geolocation is loading", () => {
     vi.mocked(useGeolocation).mockReturnValue({
       lat: null, lon: null, error: null, loading: true, retry: vi.fn(),
     });
     render(<Home />);
-    expect(screen.getByText(/位置情報を取得中/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /取得中/ })).toBeDisabled();
   });
 
   it("shows denied message when geolocation is denied", () => {

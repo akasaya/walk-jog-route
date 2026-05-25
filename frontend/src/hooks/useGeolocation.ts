@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 type GeolocationError = "denied" | "timeout" | "unavailable" | null;
 
@@ -18,7 +18,7 @@ export function useGeolocation(): UseGeolocationResult {
     lat: null,
     lon: null,
     error: null,
-    loading: true,
+    loading: false,
   });
 
   const request = useCallback(() => {
@@ -50,10 +50,6 @@ export function useGeolocation(): UseGeolocationResult {
       { timeout: 30_000, maximumAge: 60_000 },
     );
   }, []);
-
-  useEffect(() => {
-    request();
-  }, [request]);
 
   return { ...state, retry: request };
 }

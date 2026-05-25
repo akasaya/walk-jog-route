@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiError } from "../api/client";
 import { suggestRoute } from "../api/routes";
 import { RouteMap } from "../components/RouteMap";
@@ -17,9 +17,28 @@ export function Home({ onStartRoute, onGoHistory }: HomeProps) {
   const [lastMode, setLastMode] = useState<Mode>("walk");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedStart, setSelectedStart] = useState<{ lat: number; lon: number } | null>(null);
 
-  const currentLocation =
+  const geoLocation =
     geo.lat !== null && geo.lon !== null ? { lat: geo.lat, lon: geo.lon } : null;
+
+  const currentLocation = selectedStart ?? geoLocation;
+
+  const handleUseCurrentLocation = () => {
+    geo.retry();
+  };
+
+  useEffect(() => {
+    if (geoLocation) {
+      setSelectedStart(geoLocation);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.lat, geo.lon]);
+
+  const handleLocationSelect = (lat: number, lon: number) => {
+    setSelectedStart({ lat, lon });
+    setSuggestion(null);
+  };
 
   const handleSubmit = async (request: RouteRequest) => {
     setIsLoading(true);
@@ -53,14 +72,22 @@ export function Home({ onStartRoute, onGoHistory }: HomeProps) {
           )}
         </div>
 
-        {geo.loading && (
-          <div className="alert alert--info" aria-live="polite">
-            位置情報を取得中…
-          </div>
-        )}
+        <button
+          type="button"
+          className="btn-ghost"
+          onClick={handleUseCurrentLocation}
+          disabled={geo.loading}
+        >
+          {geo.loading ? "取得中…" : "📍 現在地を使う"}
+        </button>
         {geo.error === "denied" && (
           <div className="alert alert--error" role="alert">
-            位置情報の許可が必要です。座標を手動入力してください。
+            位置情報の許可が拒否されました。地図をクリックして起点を選んでください。
+          </div>
+        )}
+        {!selectedStart && !geo.loading && !geo.error && (
+          <div className="alert alert--info" aria-live="polite">
+            地図をクリックして起点を選んでください
           </div>
         )}
         {error && (
@@ -93,7 +120,9 @@ export function Home({ onStartRoute, onGoHistory }: HomeProps) {
       <div className="home-map">
         <RouteMap
           polyline={suggestion?.polyline}
-          currentLocation={currentLocation}
+          currentLocation={geoLocation}
+          selectedStart={selectedStart}
+          onLocationSelect={handleLocationSelect}
         />
       </div>
     </div>

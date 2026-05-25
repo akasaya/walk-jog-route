@@ -46,3 +46,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Screenshots (location privacy)
+home-*.png
+home-*.jpg

@@ -5,7 +5,7 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
-import { MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 // Vite バンドル時に Leaflet のデフォルトアイコンパスが壊れる問題を修正
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,6 +19,26 @@ L.Icon.Default.mergeOptions({
 interface RouteMapProps {
   polyline?: string | null;
   currentLocation?: { lat: number; lon: number } | null;
+  selectedStart?: { lat: number; lon: number } | null;
+  onLocationSelect?: (lat: number, lon: number) => void;
+}
+
+const startIcon = new L.Icon({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  className: "marker-start",
+});
+
+function MapClickHandler({ onLocationSelect }: { onLocationSelect: (lat: number, lon: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
 }
 
 const DEFAULT_CENTER: [number, number] = [35.6894, 139.6917]; // 東京
@@ -51,7 +71,7 @@ function LocationController({
   return null;
 }
 
-export function RouteMap({ polyline, currentLocation }: RouteMapProps) {
+export function RouteMap({ polyline, currentLocation, selectedStart, onLocationSelect }: RouteMapProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -97,7 +117,11 @@ export function RouteMap({ polyline, currentLocation }: RouteMapProps) {
         currentLocation={currentLocation}
         hasRoute={positions.length > 0}
       />
-      {currentLocation && (
+      {onLocationSelect && <MapClickHandler onLocationSelect={onLocationSelect} />}
+      {selectedStart && (
+        <Marker position={[selectedStart.lat, selectedStart.lon]} icon={startIcon} />
+      )}
+      {currentLocation && !selectedStart && (
         <Marker position={[currentLocation.lat, currentLocation.lon]} />
       )}
     </MapContainer>
